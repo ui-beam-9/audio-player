@@ -1,576 +1,876 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>高级语音播放器</title>
+    <link rel="stylesheet" href="https://jsd.onmicrosoft.cn/npm/element-plus@2.4.4/dist/index.min.css"/>
+    <script src="https://jsd.onmicrosoft.cn/npm/vue@3.3.4/dist/vue.global.prod.min.js"></script>
+    <script src="https://jsd.onmicrosoft.cn/npm/element-plus@2.4.4/dist/index.full.min.js"></script>
+    <script src="https://jsd.onmicrosoft.cn/npm/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        /* 顶部保密横幅 */
-        .top-banner {
-            background-color: #dc3545;
-            color: #ffffff;
-            text-align: center;
-            padding: 10px 0;
-            font-weight: bold;
-            font-size: 16px;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            width: 100%;
+      :root {
+        --primary: #409eff;
+        --primary-light: #ecf5ff;
+        --primary-dark: #337ecc;
+        --bg: #f0f7ff;
+        --surface: #ffffff;
+        --border: #e4eaf2;
+        --text: #303133;
+        --text-muted: #909399;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        font-family:
+          "Microsoft YaHei",
+          -apple-system,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        background: linear-gradient(180deg, #f0f7ff 0%, #e6f0fb 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .top-banner {
+        background-color: #e60012;
+        color: #ffffff;
+        text-align: center;
+        padding: 12px 0;
+        font-weight: bold;
+        font-size: 14px;
+        letter-spacing: 2px;
+      }
+
+      .app {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 0 20px;
+      }
+
+      .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 0 4px;
+      }
+
+      .app-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--primary-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .app-title .el-icon {
+        font-size: 26px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
         }
-        
-        body {
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            padding-top: 0; /* 取消原有顶部内边距，避免重复留白 */
-        }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            margin: 0 auto;
-            margin-top: 20px; /* 与横幅保持间距 */
-        }
-        
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
-        }
-        
-        .input-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-        
-        label {
-            display: block;
-            color: #555;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            min-height: 120px;
-            resize: vertical;
-            font-family: inherit;
-        }
-        
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .hint {
-            color: #888;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .player-section {
-            margin-bottom: 30px;
-            padding: 25px;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-        
-        .current-playing {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 14px;
-            word-break: break-all;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .control-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        
-        .control-btn:hover {
-            background: #5568d3;
-        }
-        
-        .control-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .progress-container {
-            margin-bottom: 15px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.1s;
-        }
-        
-        .time-info {
-            display: flex;
-            justify-content: space-between;
-            color: #666;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        /* 倍速控制样式 */
-        .speed-control {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .speed-label {
-            color: #555;
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .speed-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .speed-btn {
-            padding: 8px 16px;
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .speed-btn:hover {
-            background: #f0f0f0;
-        }
-        
-        .speed-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-        
-        .playlist-section {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-        
-        .playlist-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .playlist-header h3 {
-            color: #333;
-            font-size: 18px;
-        }
-        
-        .clear-btn {
-            padding: 6px 12px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .clear-btn:hover {
-            background: #c82333;
-        }
-        
-        .playlist {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .playlist-item {
-            padding: 12px;
-            background: white;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .playlist-item:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-        
-        .playlist-item.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .playlist-item-content {
-            flex: 1;
-            margin-right: 10px;
-        }
-        
-        .playlist-item-index {
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        
-        .playlist-item-url {
-            font-size: 12px;
-            opacity: 0.8;
-            word-break: break-all;
-        }
-        
-        .delete-btn {
-            padding: 4px 8px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .playlist-item.active .delete-btn {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .empty-playlist {
-            text-align: center;
-            color: #999;
-            padding: 40px;
-            font-size: 14px;
-        }
+      }
+
+      .panel {
+        background: var(--surface);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 12px rgba(64, 158, 255, 0.06);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panel-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-title .el-icon {
+        color: var(--primary);
+      }
+
+      .now-playing {
+        background: var(--primary-light);
+        border: 1px solid #d9ecff;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 18px;
+      }
+
+      .now-playing-label {
+        font-size: 12px;
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .now-playing-url {
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-all;
+        line-height: 1.5;
+      }
+
+      .controls-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .controls-row .el-button {
+        flex: 1;
+        margin-left: 0 !important;
+      }
+
+      .progress-wrap {
+        margin-bottom: 18px;
+      }
+
+      .time-info {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-muted);
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      .speed-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .speed-row .label {
+        font-size: 13px;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+
+      .hint-text {
+        margin-top: 10px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.8;
+      }
+
+      .playlist {
+        flex: 1;
+        max-height: 520px;
+        overflow-y: auto;
+        margin: 0 -6px;
+        padding: 0 6px;
+      }
+
+      .playlist::-webkit-scrollbar,
+      .log-content::-webkit-scrollbar {
+        width: 6px;
+      }
+      .playlist::-webkit-scrollbar-thumb,
+      .log-content::-webkit-scrollbar-thumb {
+        background: #c6dcf5;
+        border-radius: 3px;
+      }
+
+      .playlist-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        background: #fafbfc;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+
+      .playlist-item:hover {
+        border-color: var(--primary);
+        background: #fff;
+      }
+      .playlist-item.active {
+        background: var(--primary-light);
+        border-color: var(--primary);
+      }
+
+      .playlist-item .idx {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #e4eaf2;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 12px;
+        flex-shrink: 0;
+      }
+
+      .playlist-item.active .idx {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .playlist-item .url {
+        flex: 1;
+        font-size: 12px;
+        color: var(--text);
+        word-break: break-all;
+        line-height: 1.5;
+        margin-right: 10px;
+      }
+
+      .playlist-item.active .url {
+        color: var(--primary-dark);
+        font-weight: 500;
+      }
+
+      .playlist-item .playing-tag {
+        color: var(--primary);
+        margin-right: 8px;
+        font-size: 16px;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .empty .el-icon {
+        font-size: 42px;
+        color: #c6dcf5;
+        margin-bottom: 10px;
+      }
+
+      .playlist-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .count-badge {
+        background: var(--primary-light);
+        color: var(--primary);
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        margin-left: 6px;
+        font-weight: 600;
+      }
+
+      .log-panel {
+        margin-top: 20px;
+      }
+
+      .log-content {
+        background: #1e2a3a;
+        color: #c8d6e5;
+        border-radius: 6px;
+        padding: 14px 16px;
+        font-family: "Cascadia Code", "Consolas", "Monaco", monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        max-height: 240px;
+        overflow-y: auto;
+      }
+
+      .log-empty {
+        color: #5b6b80;
+        text-align: center;
+        padding: 12px 0;
+      }
+
+      .log-line {
+        display: flex;
+        gap: 10px;
+      }
+      .log-time {
+        color: #6c8eb3;
+        flex-shrink: 0;
+      }
+      .log-msg {
+        flex: 1;
+        word-break: break-all;
+      }
+      .log-info .log-msg {
+        color: #c8d6e5;
+      }
+      .log-success .log-msg {
+        color: #7ee787;
+      }
+      .log-warn .log-msg {
+        color: #f0b95b;
+      }
+      .log-error .log-msg {
+        color: #ff7b72;
+      }
     </style>
-</head>
-<body>
-    <!-- 顶部保密横幅 -->
-    <div class="top-banner">请严格遵守保密原则，业务信息禁止外传</div>
+  </head>
+  <body>
+    <div id="app">
+      <div class="top-banner">请严格遵守保密原则，业务信息禁止外传</div>
 
-    <div class="container">
-        <h1>🎵 语音播放器</h1>
-        
-        <!-- 输入区域 -->
-        <div class="input-section">
-            <label>批量添加语音链接</label>
-            <textarea id="urlInput" placeholder="请输入语音链接，每行一个&#10;例如：&#10;https://example.com/audio1.mp3&#10;https://example.com/audio2.mp3"></textarea>
-            <div class="hint">💡 提示：每行输入一个链接，支持 mp3、wav、ogg 等格式</div>
-            <button class="btn" onclick="addUrls()" style="margin-top: 15px;">添加到播放列表</button>
+      <div class="app">
+        <div class="app-header">
+          <div class="app-title">
+            <el-icon><headset></headset></el-icon>
+            <span>高级语音播放器</span>
+          </div>
         </div>
-        
-        <!-- 播放器区域 -->
-        <div class="player-section">
-            <div class="current-playing" id="currentPlaying">当前未播放</div>
-            
-            <!-- 倍速控制 -->
-            <div class="speed-control">
-                <span class="speed-label">播放速度</span>
-                <div class="speed-buttons">
-                    <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
-                    <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
-                    <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
-                    <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
-                    <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
-                    <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+
+        <div class="layout">
+          <!-- 左栏 -->
+          <div style="display: flex; flex-direction: column; gap: 20px">
+            <div class="panel">
+              <div class="panel-title">
+                <el-icon><plus></plus></el-icon>
+                <span>添加语音链接</span>
+              </div>
+              <el-input
+                v-model="urlInput"
+                type="textarea"
+                :rows="5"
+                placeholder="输入链接后可直接播放，或添加到播放列表&#10;支持每行一个链接批量添加&#10;https://example.com/audio.mp3"
+              ></el-input>
+              <div
+                style="
+                  margin-top: 14px;
+                  display: flex;
+                  gap: 10px;
+                  flex-wrap: wrap;
+                "
+              >
+                <el-button
+                  type="success"
+                  @click="playFromInput"
+                  style="flex: 1; min-width: 120px"
+                >
+                  <el-icon style="margin-right: 4px"
+                    ><video-play></video-play
+                  ></el-icon>
+                  立即播放
+                </el-button>
+                <el-button
+                  type="primary"
+                  @click="addUrls"
+                  style="flex: 1; min-width: 120px"
+                >
+                  <el-icon style="margin-right: 4px"><plus></plus></el-icon>
+                  添加到列表
+                </el-button>
+                <el-button @click="urlInput = ''">
+                  <el-icon><delete></delete></el-icon>
+                </el-button>
+              </div>
+              <div class="hint-text">
+                <div>提示：「立即播放」会加入列表并播放第一个链接；</div>
+                <div>
+                  「添加到列表」仅加入不播放，需要手动点击「播放」按钮播放；
                 </div>
+                <div>输入框支持多行一次添加多个链接。</div>
+              </div>
             </div>
-            
-            <div class="controls">
-                <button class="control-btn" onclick="previousTrack()">⏮ 上一首</button>
-                <button class="control-btn" id="playBtn" onclick="togglePlay()">▶ 播放</button>
-                <button class="control-btn" onclick="nextTrack()">⏭ 下一首</button>
-            </div>
-            
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar" onclick="seekAudio(event)">
-                    <div class="progress-fill" id="progressFill"></div>
+
+            <div class="panel">
+              <div class="panel-title">
+                <el-icon><video-play></video-play></el-icon>
+                <span>播放控制</span>
+              </div>
+
+              <div class="now-playing">
+                <div class="now-playing-label">
+                  {{ currentUrl ? '正在播放' : '空闲中' }}
                 </div>
+                <div class="now-playing-url">
+                  {{ currentUrl || '请输入链接直接播放，或从右侧列表选择' }}
+                </div>
+              </div>
+
+              <div class="progress-wrap">
+                <el-slider
+                  :model-value="progressPercent"
+                  :max="100"
+                  :step="0.1"
+                  :show-tooltip="false"
+                  @input="onSeek"
+                ></el-slider>
                 <div class="time-info">
-                    <span id="currentTime">0:00</span>
-                    <span id="duration">0:00</span>
+                  <span>{{ formatTime(currentTime) }}</span>
+                  <span>{{ formatTime(duration) }}</span>
                 </div>
+              </div>
+
+              <div class="controls-row">
+                <el-button @click="previousTrack">
+                  <el-icon style="margin-right: 4px"
+                    ><d-arrow-left></d-arrow-left
+                  ></el-icon>
+                  上一首
+                </el-button>
+                <el-button type="primary" @click="togglePlay">
+                  <el-icon style="margin-right: 4px">
+                    <video-pause v-if="isPlaying"></video-pause>
+                    <video-play v-else></video-play>
+                  </el-icon>
+                  {{ isPlaying ? '暂停' : '播放' }}
+                </el-button>
+                <el-button @click="nextTrack">
+                  下一首
+                  <el-icon style="margin-left: 4px"
+                    ><d-arrow-right></d-arrow-right
+                  ></el-icon>
+                </el-button>
+              </div>
+
+              <div class="speed-row">
+                <span class="label">播放速度</span>
+                <el-radio-group
+                  v-model="currentSpeed"
+                  @change="onSpeedChange"
+                  size="small"
+                >
+                  <el-radio-button :label="0.5">0.5x</el-radio-button>
+                  <el-radio-button :label="0.75">0.75x</el-radio-button>
+                  <el-radio-button :label="1">1x</el-radio-button>
+                  <el-radio-button :label="1.25">1.25x</el-radio-button>
+                  <el-radio-button :label="1.5">1.5x</el-radio-button>
+                  <el-radio-button :label="2">2x</el-radio-button>
+                </el-radio-group>
+              </div>
             </div>
-        </div>
-        
-        <!-- 播放列表 -->
-        <div class="playlist-section">
+          </div>
+
+          <!-- 右栏 -->
+          <div class="panel">
             <div class="playlist-header">
-                <h3>📃 播放列表 (<span id="playlistCount">0</span>)</h3>
-                <button class="clear-btn" onclick="clearPlaylist()">清空列表</button>
+              <div class="panel-title" style="margin-bottom: 0">
+                <el-icon><list></list></el-icon>
+                <span>播放列表</span>
+                <span class="count-badge">{{ playlist.length }}</span>
+              </div>
+              <el-button
+                type="danger"
+                plain
+                size="small"
+                :disabled="playlist.length === 0"
+                @click="clearPlaylist"
+              >
+                <el-icon style="margin-right: 4px"><delete></delete></el-icon>
+                清空列表
+              </el-button>
             </div>
-            <div class="playlist" id="playlist">
-                <div class="empty-playlist">播放列表为空<br>请在上方添加语音链接</div>
+
+            <div class="playlist">
+              <div v-if="playlist.length === 0" class="empty">
+                <el-icon><folder-opened></folder-opened></el-icon>
+                <div>播放列表为空</div>
+                <div style="margin-top: 4px">请在左侧添加语音链接</div>
+              </div>
+
+              <div
+                v-for="(url, index) in playlist"
+                :key="url"
+                class="playlist-item"
+                :class="{ active: index === currentIndex }"
+                @click="playTrack(index)"
+              >
+                <div class="idx">{{ index + 1 }}</div>
+                <div class="url">{{ url }}</div>
+                <el-icon
+                  v-if="index === currentIndex && isPlaying"
+                  class="playing-tag"
+                >
+                  <headset></headset>
+                </el-icon>
+                <el-button
+                  type="danger"
+                  plain
+                  size="small"
+                  circle
+                  @click.stop="deleteTrack(index)"
+                >
+                  <el-icon><delete></delete></el-icon>
+                </el-button>
+              </div>
             </div>
+          </div>
         </div>
-        
-        <audio id="audioPlayer">
+
+        <!-- 操作日志 -->
+        <div class="panel log-panel">
+          <div class="playlist-header">
+            <div class="panel-title" style="margin-bottom: 0">
+              <el-icon><document></document></el-icon>
+              <span>操作日志</span>
+              <span class="count-badge">{{ logs.length }}</span>
+            </div>
+            <el-button
+              plain
+              size="small"
+              :disabled="logs.length === 0"
+              @click="clearLogs"
+            >
+              <el-icon style="margin-right: 4px"><delete></delete></el-icon>
+              清空日志
+            </el-button>
+          </div>
+          <div class="log-content" ref="logBox">
+            <div v-if="logs.length === 0" class="log-empty">暂无日志</div>
+            <div
+              v-for="log in logs"
+              :key="log.id"
+              class="log-line"
+              :class="'log-' + log.type"
+            >
+              <span class="log-time">[{{ log.time }}]</span>
+              <span class="log-msg">{{ log.msg }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <audio
+        ref="audio"
+        @timeupdate="onTimeUpdate"
+        @loadedmetadata="onMetadata"
+        @ended="nextTrack"
+        @error="onError"
+        @play="isPlaying = true"
+        @pause="isPlaying = false"
+      ></audio>
     </div>
+
     <script>
-        let playlist = [];
-        let currentIndex = -1;
-        let currentSpeed = 1; // 当前播放速度
-        const audio = document.getElementById('audioPlayer');
-        const playBtn = document.getElementById('playBtn');
-        const progressFill = document.getElementById('progressFill');
-        const currentTimeEl = document.getElementById('currentTime');
-        const durationEl = document.getElementById('duration');
-        
-        // 添加URL到播放列表
-        function addUrls() {
-            const input = document.getElementById('urlInput');
-            const urls = input.value.split('\n').filter(url => url.trim());
-            
+      const { createApp, ref, computed, nextTick } = Vue;
+
+      const App = {
+        setup() {
+          const urlInput = ref("");
+          const playlist = ref([]);
+          const currentIndex = ref(-1);
+          const currentUrl = ref("");
+          const currentSpeed = ref(1);
+          const isPlaying = ref(false);
+          const currentTime = ref(0);
+          const duration = ref(0);
+          const audio = ref(null);
+          const logs = ref([]);
+          const logBox = ref(null);
+
+          let logId = 0;
+          let loadStartTime = 0;
+          let pendingSize = null;
+
+          const progressPercent = computed(() =>
+            duration.value ? (currentTime.value / duration.value) * 100 : 0,
+          );
+
+          function addLog(msg, type = "info") {
+            const d = new Date();
+            const pad = (n) => String(n).padStart(2, "0");
+            const time = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            logs.value.push({ id: ++logId, time, msg, type });
+            if (logs.value.length > 500)
+              logs.value.splice(0, logs.value.length - 500);
+            nextTick(() => {
+              if (logBox.value)
+                logBox.value.scrollTop = logBox.value.scrollHeight;
+            });
+          }
+
+          function clearLogs() {
+            logs.value = [];
+          }
+
+          function formatSize(bytes) {
+            if (!bytes || isNaN(bytes)) return "未知";
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+            if (bytes < 1024 * 1024 * 1024)
+              return (bytes / 1024 / 1024).toFixed(2) + " MB";
+            return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+          }
+
+          async function probeSize(url) {
+            try {
+              const res = await fetch(url, { method: "HEAD" });
+              if (!res.ok) {
+                addLog(`HEAD 请求失败：HTTP ${res.status}`, "warn");
+                return null;
+              }
+              const len = res.headers.get("Content-Length");
+              return len ? parseInt(len, 10) : null;
+            } catch (e) {
+              addLog(`无法获取文件大小（跨域被阻止）：${e.message}`, "warn");
+              return null;
+            }
+          }
+
+          async function loadAndPlay(url) {
+            currentUrl.value = url;
+            addLog(`开始加载音频: ${url}`, "info");
+            loadStartTime = performance.now();
+            pendingSize = null;
+
+            audio.value.src = url;
+            audio.value.playbackRate = currentSpeed.value;
+            audio.value.play().catch((err) => {
+              addLog(`播放被拒绝: ${err.message}`, "error");
+            });
+
+            probeSize(url).then((size) => {
+              pendingSize = size;
+            });
+          }
+
+          function playFromInput() {
+            const urls = urlInput.value
+              .split("\n")
+              .map((u) => u.trim())
+              .filter(Boolean);
             if (urls.length === 0) {
-                alert('请输入至少一个链接！');
-                return;
+              ElementPlus.ElMessage.warning("请先输入链接");
+              return;
             }
-            
-            urls.forEach(url => {
-                url = url.trim();
-                if (url && !playlist.includes(url)) {
-                    playlist.push(url);
-                }
+            let added = 0;
+            urls.forEach((u) => {
+              if (!playlist.value.includes(u)) {
+                playlist.value.push(u);
+                added++;
+              }
             });
-            
-            updatePlaylist();
-            input.value = '';
-            alert(`成功添加 ${urls.length} 个链接到播放列表！`);
-        }
-        
-        // 更新播放列表显示
-        function updatePlaylist() {
-            const playlistEl = document.getElementById('playlist');
-            const countEl = document.getElementById('playlistCount');
-            
-            countEl.textContent = playlist.length;
-            
-            if (playlist.length === 0) {
-                playlistEl.innerHTML = '<div class="empty-playlist">播放列表为空<br>请在上方添加语音链接</div>';
-                return;
+            const firstUrl = urls[0];
+            const playIndex = playlist.value.indexOf(firstUrl);
+            urlInput.value = "";
+            if (added > 0) addLog(`添加 ${added} 个链接到播放列表`, "success");
+            playTrack(playIndex);
+          }
+
+          function addUrls() {
+            const urls = urlInput.value
+              .split("\n")
+              .map((u) => u.trim())
+              .filter(Boolean);
+            if (urls.length === 0) {
+              ElementPlus.ElMessage.warning("请输入至少一个链接");
+              return;
             }
-            
-            playlistEl.innerHTML = playlist.map((url, index) => `
-                <div class="playlist-item ${index === currentIndex ? 'active' : ''}" onclick="playTrack(${index})">
-                    <div class="playlist-item-content">
-                        <span class="playlist-item-index">${index + 1}.</span>
-                        <span class="playlist-item-url">${url}</span>
-                    </div>
-                    <button class="delete-btn" onclick="deleteTrack(event, ${index})">删除</button>
-                </div>
-            `).join('');
-        }
-        
-        // 播放指定曲目
-        function playTrack(index) {
-            if (index < 0 || index >= playlist.length) return;
-            
-            currentIndex = index;
-            audio.src = playlist[index];
-            audio.playbackRate = currentSpeed; // 设置播放速度
-            audio.play();
-            playBtn.textContent = '⏸ 暂停';
-            
-            document.getElementById('currentPlaying').textContent = `正在播放：${playlist[index]}`;
-            updatePlaylist();
-        }
-        
-        // 切换播放/暂停
-        function togglePlay() {
-            if (playlist.length === 0) {
-                alert('播放列表为空！请先添加语音链接。');
-                return;
+            let added = 0;
+            urls.forEach((u) => {
+              if (!playlist.value.includes(u)) {
+                playlist.value.push(u);
+                added++;
+              }
+            });
+            urlInput.value = "";
+            ElementPlus.ElMessage.success(`成功添加 ${added} 个链接`);
+            addLog(`添加 ${added} 个链接到播放列表`, "success");
+          }
+
+          function playTrack(index) {
+            if (index < 0 || index >= playlist.value.length) return;
+            currentIndex.value = index;
+            nextTick(() => loadAndPlay(playlist.value[index]));
+          }
+
+          function togglePlay() {
+            if (!audio.value.src && playlist.value.length === 0) {
+              ElementPlus.ElMessage.warning("请先输入链接或添加到列表");
+              return;
             }
-            
-            if (audio.paused) {
-                if (currentIndex === -1) {
-                    playTrack(0);
-                } else {
-                    audio.play();
-                    playBtn.textContent = '⏸ 暂停';
-                }
+            if (audio.value.paused) {
+              if (!audio.value.src && playlist.value.length > 0) playTrack(0);
+              else {
+                audio.value.play();
+                addLog("继续播放", "info");
+              }
             } else {
-                audio.pause();
-                playBtn.textContent = '▶ 播放';
+              audio.value.pause();
+              addLog("暂停播放", "info");
             }
-        }
-        
-        // 上一首
-        function previousTrack() {
-            if (playlist.length === 0) return;
-            const newIndex = currentIndex <= 0 ? playlist.length - 1 : currentIndex - 1;
-            playTrack(newIndex);
-        }
-        
-        // 下一首
-        function nextTrack() {
-            if (playlist.length === 0) return;
-            const newIndex = currentIndex >= playlist.length - 1 ? 0 : currentIndex + 1;
-            playTrack(newIndex);
-        }
-        
-        // 设置播放速度
-        function setSpeed(speed) {
-            currentSpeed = speed;
-            audio.playbackRate = speed;
-            
-            // 更新按钮状态
-            document.querySelectorAll('.speed-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
-        
-        // 删除曲目
-        function deleteTrack(event, index) {
-            event.stopPropagation();
-            
-            if (confirm('确定要删除这首歌吗？')) {
-                const wasPlaying = index === currentIndex && !audio.paused;
-                
-                playlist.splice(index, 1);
-                
-                if (index < currentIndex) {
-                    currentIndex--;
-                } else if (index === currentIndex) {
-                    audio.pause();
-                    currentIndex = -1;
-                    playBtn.textContent = '▶ 播放';
-                    document.getElementById('currentPlaying').textContent = '当前未播放';
+          }
+
+          function previousTrack() {
+            if (playlist.value.length === 0) return;
+            const base = currentIndex.value < 0 ? 0 : currentIndex.value;
+            const i = base <= 0 ? playlist.value.length - 1 : base - 1;
+            playTrack(i);
+          }
+
+          function nextTrack() {
+            if (playlist.value.length === 0) return;
+            const base = currentIndex.value < 0 ? -1 : currentIndex.value;
+            const i = base >= playlist.value.length - 1 ? 0 : base + 1;
+            playTrack(i);
+          }
+
+          function onSpeedChange(v) {
+            currentSpeed.value = v;
+            if (audio.value) audio.value.playbackRate = v;
+            addLog(`播放速度切换为 ${v}x`, "info");
+          }
+
+          function deleteTrack(index) {
+            ElementPlus.ElMessageBox.confirm("确定要删除这首语音？", "提示", {
+              type: "warning",
+            })
+              .then(() => {
+                const removed = playlist.value[index];
+                playlist.value.splice(index, 1);
+                if (index < currentIndex.value) {
+                  currentIndex.value--;
+                } else if (index === currentIndex.value) {
+                  audio.value.pause();
+                  audio.value.src = "";
+                  currentIndex.value = -1;
+                  currentUrl.value = "";
                 }
-                
-                updatePlaylist();
+                addLog(`已删除：${removed}`, "warn");
+              })
+              .catch(() => {});
+          }
+
+          function clearPlaylist() {
+            ElementPlus.ElMessageBox.confirm(
+              "确定要清空整个播放列表？",
+              "提示",
+              {
+                type: "warning",
+              },
+            )
+              .then(() => {
+                playlist.value = [];
+                currentIndex.value = -1;
+                currentUrl.value = "";
+                audio.value.pause();
+                audio.value.src = "";
+                addLog("已清空播放列表", "warn");
+              })
+              .catch(() => {});
+          }
+
+          function onSeek(v) {
+            if (audio.value && duration.value) {
+              audio.value.currentTime = (v / 100) * duration.value;
             }
-        }
-        
-        // 清空播放列表
-        function clearPlaylist() {
-            if (playlist.length === 0) return;
-            
-            if (confirm('确定要清空整个播放列表吗？')) {
-                playlist = [];
-                currentIndex = -1;
-                audio.pause();
-                audio.src = '';
-                playBtn.textContent = '▶ 播放';
-                document.getElementById('currentPlaying').textContent = '当前未播放';
-                updatePlaylist();
-            }
-        }
-        
-        // 拖动进度条
-        function seekAudio(event) {
-            if (!audio.src) return;
-            
-            const progressBar = document.getElementById('progressBar');
-            const rect = progressBar.getBoundingClientRect();
-            const percent = (event.clientX - rect.left) / rect.width;
-            audio.currentTime = percent * audio.duration;
-        }
-        
-        // 格式化时间
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-        
-        // 音频事件监听
-        audio.addEventListener('timeupdate', () => {
-            const percent = (audio.currentTime / audio.duration) * 100;
-            progressFill.style.width = percent + '%';
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        });
-        
-        audio.addEventListener('loadedmetadata', () => {
-            durationEl.textContent = formatTime(audio.duration);
-        });
-        
-        audio.addEventListener('ended', () => {
-            nextTrack();
-        });
-        
-        audio.addEventListener('error', () => {
-            alert('播放失败！请检查链接是否正确。');
-            playBtn.textContent = '▶ 播放';
-        });
+          }
+
+          function onTimeUpdate() {
+            currentTime.value = audio.value.currentTime;
+          }
+
+          function onMetadata() {
+            duration.value = audio.value.duration;
+            const cost = Math.round(performance.now() - loadStartTime);
+            const checkSize = (retries = 0) => {
+              if (pendingSize !== null || retries > 10) {
+                const sizeStr = pendingSize
+                  ? formatSize(pendingSize)
+                  : "未知（可能跨域受限）";
+                addLog(
+                  `音频元数据加载完成，大小：${sizeStr}，耗时：${cost}ms`,
+                  "success",
+                );
+              } else {
+                setTimeout(() => checkSize(retries + 1), 50);
+              }
+            };
+            checkSize();
+          }
+
+          function onError() {
+            const err = audio.value.error;
+            const codeMap = {
+              1: "MEDIA_ERR_ABORTED 用户中止",
+              2: "MEDIA_ERR_NETWORK 网络错误（可能跨域被阻止）",
+              3: "MEDIA_ERR_DECODE 解码失败",
+              4: "MEDIA_ERR_SRC_NOT_SUPPORTED 资源不支持或跨域被阻止",
+            };
+            const reason = err
+              ? codeMap[err.code] || `错误码 ${err.code}`
+              : "未知错误";
+            addLog(`播放失败：${reason}`, "error");
+            ElementPlus.ElMessage.error("播放失败，详情见日志");
+          }
+
+          function formatTime(s) {
+            if (!s || isNaN(s)) return "0:00";
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec.toString().padStart(2, "0")}`;
+          }
+
+          addLog("播放器初始化完成", "success");
+
+          return {
+            urlInput,
+            playlist,
+            currentIndex,
+            currentUrl,
+            currentSpeed,
+            isPlaying,
+            currentTime,
+            duration,
+            progressPercent,
+            audio,
+            logs,
+            logBox,
+            playFromInput,
+            addUrls,
+            playTrack,
+            togglePlay,
+            previousTrack,
+            nextTrack,
+            onSpeedChange,
+            deleteTrack,
+            clearPlaylist,
+            clearLogs,
+            onSeek,
+            onTimeUpdate,
+            onMetadata,
+            onError,
+            formatTime,
+          };
+        },
+      };
+
+      const app = createApp(App);
+      app.use(ElementPlus);
+      for (const [name, comp] of Object.entries(ElementPlusIconsVue)) {
+        app.component(name, comp);
+      }
+      app.mount("#app");
     </script>
-</body>
+  </body>
 </html>
